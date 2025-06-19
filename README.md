@@ -71,3 +71,7 @@ curl -X DELETE http://localhost:8080/api/customers/5580eac4-3785-412a-8bc2-ee0e7
 | **User / Password** | `sa` / *(leave blank)* |
 
 ---
+
+4 Swagger URI
+
+http://localhost:8080/swagger-ui/index.html
