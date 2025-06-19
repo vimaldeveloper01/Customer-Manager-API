@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: Customer Management API
+  description: API for managing customer data and calculating membership tiers
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+paths:
+  /customers:
+    post:
+      tags:
+        - Customer Management
+      summary: Create a new customer
+      description: Creates a new customer with the provided details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: Invalid request (missing required fields or invalid email)
+        '500':
+          description: Internal server error
+
+    get:
+      tags:
+        - Customer Management
+      summary: Search customers by name or email
+      description: Retrieve customers by name (partial match) or exact email match
+      parameters:
+        - name: name
+          in: query
+          description: Name to search for (partial match)
+          required: false
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Email to search for (exact match)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customers found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CustomerResponse'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: Neither name nor email parameter provided
+        '404':
+          description: No customers found
+        '500':
+          description: Internal server error
+
+  /customers/{id}:
+    get:
+      tags:
+        - Customer Management
+      summary: Get customer by ID
+      description: Retrieve a single customer by their unique ID
+      parameters:
+        - name: id
+          in: path
+          description: Customer ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+    put:
+      tags:
+        - Customer Management
+      summary: Update customer by ID
+      description: Update an existing customer's details
+      parameters:
+        - name: id
+          in: path
+          description: Customer ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: Invalid request (missing required fields or invalid email)
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags:
+        - Customer Management
+      summary: Delete customer by ID
+      description: Delete an existing customer
+      parameters:
+        - name: id
+          in: path
+          description: Customer ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Customer deleted successfully
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    CustomerRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          description: Customer's full name
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+          example: john.doe@example.com
+        annualSpend:
+          type: number
+          format: double
+          description: Customer's annual spending amount
+          example: 1500.50
+        lastPurchaseDate:
+          type: string
+          format: date-time
+          description: Date and time of last purchase (ISO 8601 format)
+          example: "2023-10-15T14:30:00"
+
+    CustomerResponse:
+      allOf:
+        - $ref: '#/components/schemas/CustomerRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Auto-generated customer ID
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            tier:
+              type: string
+              description: Calculated membership tier
+              enum:
+                - Silver
+                - Gold
+                - Platinum
+              example: Gold
